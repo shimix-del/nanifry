@@ -1,0 +1,103 @@
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { BranchProvider } from './context/BranchContext';
+import { PosCartProvider } from './context/PosCartContext';
+import { Navbar } from './components/Layout/Navbar';
+import { Sidebar, NavTab } from './components/Layout/Sidebar';
+import { LoginScreen } from './components/Auth/LoginScreen';
+import { PinKeypadModal } from './components/Auth/PinKeypadModal';
+import { PosTerminal } from './components/Pos/PosTerminal';
+import { InventoryManager } from './components/Inventory/InventoryManager';
+import { MenuManager } from './components/MenuAdmin/MenuManager';
+import { ShiftManager } from './components/Shifts/ShiftManager';
+import { OpenShiftModal } from './components/Shifts/OpenShiftModal';
+import { ExpenseTracker } from './components/Expenses/ExpenseTracker';
+import { AnalyticsDashboard } from './components/Dashboard/AnalyticsDashboard';
+import { StaffManager } from './components/Staff/StaffManager';
+
+const AuthenticatedApp: React.FC = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<NavTab>('pos');
+  const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
+  const [isOpenShiftModalOpen, setIsOpenShiftModalOpen] = useState<boolean>(false);
+
+  return (
+    <div className="flex flex-col h-screen w-screen bg-zinc-950 overflow-hidden text-zinc-100">
+      {/* Top Navbar */}
+      <Navbar
+        onOpenPinModal={() => setIsPinModalOpen(true)}
+        onOpenShiftModal={() => {
+          if (activeTab !== 'shifts') {
+            setActiveTab('shifts');
+          } else {
+            setIsOpenShiftModalOpen(true);
+          }
+        }}
+      />
+
+      {/* Main Body: Sidebar + Active View */}
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
+
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {activeTab === 'pos' && <PosTerminal />}
+          {activeTab === 'shifts' && <ShiftManager />}
+          {activeTab === 'inventory' && <InventoryManager />}
+          {activeTab === 'menu' && <MenuManager />}
+          {activeTab === 'expenses' && <ExpenseTracker />}
+          {activeTab === 'analytics' && <AnalyticsDashboard />}
+          {activeTab === 'staff' && <StaffManager />}
+        </main>
+      </div>
+
+      {/* Global Modals */}
+      <PinKeypadModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+      />
+
+      <OpenShiftModal
+        isOpen={isOpenShiftModalOpen}
+        onClose={() => setIsOpenShiftModalOpen(false)}
+        onShiftOpened={() => {}}
+      />
+    </div>
+  );
+};
+
+const AppContent: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-zinc-400 space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-amber-500 flex items-center justify-center text-3xl shadow-xl shadow-brand-500/25 animate-pulse">
+          🍟
+        </div>
+        <div className="text-sm font-bold text-zinc-200">Loading NANI FRYS POS...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  return (
+    <BranchProvider>
+      <PosCartProvider>
+        <AuthenticatedApp />
+      </PosCartProvider>
+    </BranchProvider>
+  );
+};
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+export default App;

@@ -1,0 +1,189 @@
+import React, { useState, useEffect } from 'react';
+import {
+  UtensilsCrossed,
+  Store,
+  Clock,
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  KeyRound,
+  LogOut,
+  User as UserIcon,
+  ShieldCheck,
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useBranch } from '../../context/BranchContext';
+import { api } from '../../services/api';
+import { offlineSync, OfflineOrder } from '../../services/offlineSync';
+import { Shift } from '../../types';
+
+interface NavbarProps {
+  onOpenPinModal: () => void;
+  onOpenShiftModal: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onOpenPinModal, onOpenShiftModal }) => {
+  const { user, logout } = useAuth();
+  const { branches, currentBranchId, currentBranch, setCurrentBranchId } = useBranch();
+  const [activeShift, setActiveShift] = useState<Shift | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [offlineQueue, setOfflineQueue] = useState<OfflineOrder[]>([]);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+
+  const fetchShiftStatus = async () => {
+    try {
+      const data = await api.getCurrentShift({ branchId: currentBranchId || undefined });
+      setActiveShift(data.activeShift);
+    } catch {
+      setActiveShift(null);
+    }
+  };
+
+  const updateOfflineStatus = () => {
+    setIsOnline(navigator.onLine);
+    setOfflineQueue(offlineSync.getQueue());
+  };
+
+  useEffect(() => {
+    fetchShiftStatus();
+    updateOfflineStatus();
+
+    window.addEventListener('online', updateOfflineStatus);
+    window.addEventListener('offline', updateOfflineStatus);
+    window.addEventListener('nanifrys_offline_queue_updated', updateOfflineStatus);
+
+    const interval = setInterval(fetchShiftStatus, 15000);
+
+    return () => {
+      window.removeEventListener('online', updateOfflineStatus);
+      window.removeEventListener('offline', updateOfflineStatus);
+      window.removeEventListener('nanifrys_offline_queue_updated', updateOfflineStatus);
+      clearInterval(interval);
+    };
+  }, [currentBranchId]);
+
+  const handleSyncNow = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await offlineSync.syncPendingOrders();
+      if (res.synced > 0) {
+        alert(`Successfully synced ${res.synced} offline orders!`);
+      }
+      updateOfflineStatus();
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  return (
+    <header className="bg-zinc-900 border-b border-zinc-800 text-zinc-100 px-4 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-md">
+      {/* Brand & Logo */}
+      <div className="flex items-center space-x-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-600 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white font-extrabold text-xl">
+          🍟
+        </div>
+        <div>
+          <div className="flex items-center space-x-1.5">
+            <span className="text-lg font-black tracking-tight text-white">NANI <span className="text-brand-500">FRYS</span></span>
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">
+              POS
+            </span>
+          </div>
+          <p className="text-[10px] text-zinc-400 font-medium hidden sm:block">Hotel, Fast Food & Multi-Branch Management</p>
+        </div>
+      </div>
+
+      {/* Center Controls: Branch Switcher & Active Shift */}
+      <div className="flex items-center space-x-2 sm:space-x-3">
+        {/* Multi-Branch Selector */}
+        <div className="relative flex items-center bg-zinc-800/80 border border-zinc-700/80 rounded-xl px-2.5 py-1.5">
+          <Store className="w-4 h-4 text-brand-400 mr-2 shrink-0" />
+          <select
+            aria-label="Select Restaurant Branch"
+            value={currentBranchId || 'all'}
+            onChange={e => setCurrentBranchId(e.target.value === 'all' ? null : e.target.value)}
+            disabled={user?.role === 'CASHIER'}
+            className="bg-transparent text-xs font-semibold text-zinc-200 outline-none cursor-pointer pr-2 max-w-[130px] sm:max-w-[200px] truncate"
+          >
+            {user?.role === 'OWNER' && <option value="all" className="bg-zinc-900 text-white">All Branches (Central HQ)</option>}
+            {branches.map(b => (
+              <option key={b.id} value={b.id} className="bg-zinc-900 text-white">
+                {b.name} ({b.code})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Shift Status Button */}
+        <button
+          onClick={onOpenShiftModal}
+          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
+            activeShift
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5 shrink-0" />
+          <span className="hidden md:inline">
+            {activeShift ? `Shift Open (${activeShift.cashier?.name.split(' ')[0]})` : 'No Open Shift'}
+          </span>
+          <span className="md:hidden">{activeShift ? 'Shift Open' : 'Open Shift'}</span>
+        </button>
+
+        {/* Offline Indicator & Sync */}
+        {!isOnline || offlineQueue.length > 0 ? (
+          <div className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300">
+            <WifiOff className="w-3.5 h-3.5 animate-pulse text-amber-400" />
+            <span className="hidden sm:inline">{offlineQueue.length} Queued</span>
+            <button
+              onClick={handleSyncNow}
+              disabled={isSyncing || !isOnline}
+              className="p-1 hover:bg-amber-500/30 rounded transition"
+              title="Sync offline orders now"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        ) : (
+          <div className="hidden lg:flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-emerald-400 bg-emerald-500/10">
+            <Wifi className="w-3 h-3 text-emerald-400" />
+            <span>Online</span>
+          </div>
+        )}
+      </div>
+
+      {/* Right Controls: Quick PIN Switch, User Info & Logout */}
+      <div className="flex items-center space-x-2">
+        {/* Switch Cashier via 4-Digit PIN */}
+        <button
+          onClick={onOpenPinModal}
+          className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 transition active:scale-95 shadow-sm"
+          title="Quick Switch Cashier via PIN"
+        >
+          <KeyRound className="w-3.5 h-3.5 text-brand-400" />
+          <span className="hidden sm:inline">Switch PIN</span>
+        </button>
+
+        {/* User Role Tag */}
+        <div className="hidden md:flex items-center space-x-2 pl-2 border-l border-zinc-800">
+          <div className="text-right">
+            <div className="text-xs font-bold text-zinc-200 leading-tight">{user?.name}</div>
+            <div className="text-[10px] font-semibold text-brand-400 flex items-center justify-end space-x-0.5">
+              <ShieldCheck className="w-3 h-3 inline" />
+              <span>{user?.role}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button
+          onClick={logout}
+          className="p-2 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded-xl transition"
+          title="Sign Out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
+      </div>
+    </header>
+  );
+};

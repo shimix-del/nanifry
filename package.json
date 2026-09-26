@@ -1,0 +1,29 @@
+{
+  "name": "simba-pos-system",
+  "version": "1.0.0",
+  "description": "Multi-Branch Restaurant & Eatery Point of Sale and Inventory Management System",
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "start": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build:server": "npm --prefix server run build",
+    "build:client": "npm --prefix client run build",
+    "db:seed": "npm --prefix server run db:seed",
+    "db:push": "npm --prefix server run db:push"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "kenya",
+    "restaurant",
+    "inventory",
+    "multi-branch",
+    "mpesa"
+  ],
+  "author": "Antigravity Engineer",
+  "license": "ISC"
+}

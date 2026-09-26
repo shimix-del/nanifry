@@ -1,0 +1,250 @@
+import React, { useState } from 'react';
+import { KeyRound, Mail, Lock, Store, Shield, ArrowRight, Sparkles, Delete } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+
+export const LoginScreen: React.FC = () => {
+  const { loginWithCredentials, loginWithPin } = useAuth();
+  const [mode, setMode] = useState<'PIN' | 'PASSWORD'>('PIN');
+  const [pin, setPin] = useState<string>('');
+  const [email, setEmail] = useState<string>('admin@nanifrys.co.ke');
+  const [password, setPassword] = useState<string>('admin123');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handlePinInput = (num: string) => {
+    if (pin.length < 6) {
+      const newPin = pin + num;
+      setPin(newPin);
+      setError(null);
+      if (newPin.length === 4) {
+        // Auto-submit when 4 digits reached
+        submitPin(newPin);
+      }
+    }
+  };
+
+  const handlePinDelete = () => {
+    setPin(prev => prev.slice(0, -1));
+  };
+
+  const handlePinClear = () => {
+    setPin('');
+  };
+
+  const submitPin = async (pinToSubmit: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await loginWithPin(pinToSubmit);
+    } catch (err: any) {
+      setError(err.message || 'Invalid PIN code. Try demo PINs: 9999 or 1234');
+      setPin('');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    try {
+      await loginWithCredentials(email, password);
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Check email & password.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const quickDemoLogins = [
+    { label: 'Robina (Owner)', pin: '9999', role: 'OWNER', badge: 'All Branches' },
+    { label: 'Manager', pin: '1111', role: 'MANAGER', badge: 'Migadini' },
+    { label: 'Cashier 1', pin: '1234', role: 'CASHIER', badge: 'Migadini' },
+    { label: 'Cashier 2', pin: '2345', role: 'CASHIER', badge: 'Migadini' },
+    { label: 'Cashier 3', pin: '3456', role: 'CASHIER', badge: 'Migadini' },
+    { label: 'Cashier 4', pin: '4567', role: 'CASHIER', badge: 'Migadini' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-zinc-950 flex flex-col justify-center items-center p-4 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-600/20 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10">
+        {/* Brand Header */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-amber-500 shadow-xl shadow-brand-500/25 text-3xl mb-3">
+            🍟
+          </div>
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center justify-center space-x-2">
+            <span>NANI</span>
+            <span className="text-brand-500">FRYS</span>
+          </h1>
+          <p className="text-xs text-zinc-400 mt-1">Multi-Branch Hotel, Fast Food & Inventory POS</p>
+        </div>
+
+        {/* Mode Switcher */}
+        <div className="flex bg-zinc-800/80 p-1 rounded-xl mb-6 border border-zinc-700/60">
+          <button
+            onClick={() => { setMode('PIN'); setError(null); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-2 ${
+              mode === 'PIN' ? 'bg-brand-500 text-white shadow-md' : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>Fast PIN Login</span>
+          </button>
+          <button
+            onClick={() => { setMode('PASSWORD'); setError(null); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-2 ${
+              mode === 'PASSWORD' ? 'bg-brand-500 text-white shadow-md' : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>Email / Password</span>
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-medium text-center animate-shake">
+            {error}
+          </div>
+        )}
+
+        {/* PIN Pad Mode */}
+        {mode === 'PIN' ? (
+          <div>
+            {/* PIN Display circles */}
+            <div className="flex justify-center space-x-3 mb-6">
+              {[0, 1, 2, 3].map(index => (
+                <div
+                  key={index}
+                  className={`w-4 h-4 rounded-full border-2 transition-all ${
+                    pin.length > index
+                      ? 'bg-brand-500 border-brand-500 scale-110 shadow-md shadow-brand-500/50'
+                      : 'border-zinc-700 bg-zinc-800'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Keypad Grid */}
+            <div className="grid grid-cols-3 gap-2.5 mb-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handlePinInput(num.toString())}
+                  disabled={isLoading}
+                  className="h-14 rounded-2xl bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/80 active:scale-95 text-xl font-black text-zinc-100 transition shadow-sm flex items-center justify-center"
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handlePinClear}
+                disabled={isLoading}
+                className="h-14 rounded-2xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-800 text-xs font-bold text-zinc-400 transition flex items-center justify-center"
+              >
+                CLEAR
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePinInput('0')}
+                disabled={isLoading}
+                className="h-14 rounded-2xl bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/80 active:scale-95 text-xl font-black text-zinc-100 transition shadow-sm flex items-center justify-center"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={handlePinDelete}
+                disabled={isLoading}
+                className="h-14 rounded-2xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 transition flex items-center justify-center"
+              >
+                <Delete className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Demo Staff Logins */}
+            <div className="border-t border-zinc-800/80 pt-4">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-400 mb-2">
+                <span className="flex items-center space-x-1">
+                  <Sparkles className="w-3 h-3 text-brand-400" />
+                  <span>1-Tap Demo Staff Switch:</span>
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {quickDemoLogins.map(staff => (
+                  <button
+                    key={staff.pin}
+                    type="button"
+                    onClick={() => submitPin(staff.pin)}
+                    className="p-2 bg-zinc-800/70 hover:bg-zinc-750 border border-zinc-700/60 rounded-xl text-left transition hover:border-brand-500/50 group"
+                  >
+                    <div className="text-xs font-bold text-zinc-200 group-hover:text-brand-400 truncate">
+                      {staff.label}
+                    </div>
+                    <div className="text-[10px] text-zinc-400 flex items-center justify-between mt-0.5">
+                      <span>{staff.badge}</span>
+                      <span className="font-mono text-zinc-500 bg-zinc-900 px-1 rounded">PIN {staff.pin}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Email & Password Mode */
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-zinc-300 mb-1.5">Email Address</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-zinc-400 absolute left-3 top-3.5" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="admin@nanifrys.co.ke"
+                  required
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-300 mb-1.5">Password</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-zinc-400 absolute left-3 top-3.5" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white font-bold rounded-xl shadow-lg shadow-brand-500/25 transition flex items-center justify-center space-x-2"
+            >
+              <span>{isLoading ? 'Signing In...' : 'Sign In as Admin / Owner'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <div className="text-center text-xs text-zinc-500 mt-2">
+              Default Admin: <span className="text-zinc-300 font-mono">admin@nanifrys.co.ke</span> / <span className="text-zinc-300 font-mono">admin123</span>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
