@@ -4,6 +4,7 @@ import { BranchProvider } from './context/BranchContext';
 import { PosCartProvider } from './context/PosCartContext';
 import { Navbar } from './components/Layout/Navbar';
 import { Sidebar, NavTab } from './components/Layout/Sidebar';
+import { MobileBottomNav } from './components/Layout/MobileBottomNav';
 import { LoginScreen } from './components/Auth/LoginScreen';
 import { PinKeypadModal } from './components/Auth/PinKeypadModal';
 import { PosTerminal } from './components/Pos/PosTerminal';
@@ -20,12 +21,14 @@ const AuthenticatedApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('pos');
   const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
   const [isOpenShiftModalOpen, setIsOpenShiftModalOpen] = useState<boolean>(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-zinc-950 overflow-hidden text-zinc-100">
       {/* Top Navbar */}
       <Navbar
         onOpenPinModal={() => setIsPinModalOpen(true)}
+        onOpenMobileMenu={() => setIsMobileDrawerOpen(true)}
         onOpenShiftModal={() => {
           if (activeTab !== 'shifts') {
             setActiveTab('shifts');
@@ -36,8 +39,13 @@ const AuthenticatedApp: React.FC = () => {
       />
 
       {/* Main Body: Sidebar + Active View */}
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
+      <div className="flex-1 flex overflow-hidden pb-12 md:pb-0">
+        <Sidebar
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          isMobileDrawerOpen={isMobileDrawerOpen}
+          onCloseMobileDrawer={() => setIsMobileDrawerOpen(false)}
+        />
 
         <main className="flex-1 flex flex-col overflow-hidden">
           {activeTab === 'pos' && <PosTerminal />}
@@ -49,6 +57,13 @@ const AuthenticatedApp: React.FC = () => {
           {activeTab === 'staff' && <StaffManager />}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Phones & Small Tablets) */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onOpenMore={() => setIsMobileDrawerOpen(true)}
+      />
 
       {/* Global Modals */}
       <PinKeypadModal

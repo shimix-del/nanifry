@@ -1,5 +1,5 @@
 // Standalone In-Browser Mock Store for GitHub Pages static hosting
-import { Branch, Category, MenuItem, StockItem, Shift, Expense, Order } from '../types';
+import { Branch, Category, MenuItem, StockItem, Shift, Expense, Order, DashboardSummary } from '../types';
 
 const STORAGE_PREFIX = 'nanifrys_standalone_';
 
@@ -723,7 +723,7 @@ export const mockStore = {
     return { success: true };
   },
 
-  getDashboardSummary: (params?: { branchId?: string }) => {
+  getDashboardSummary: (params?: { branchId?: string }): DashboardSummary => {
     const orders = getStored<Order[]>('orders', []);
     const expenses = getStored<Expense[]>('expenses', []);
 
@@ -737,57 +737,56 @@ export const mockStore = {
 
     return {
       todayGrossSales: totalRevenue || 28500,
-      todayNetSales: (totalRevenue || 28500) * 0.98,
+      todayDiscounts: 0,
       todayOrderCount: relevantOrders.length || 42,
-      averageOrderValue: relevantOrders.length ? Math.round(totalRevenue / relevantOrders.length) : 450,
-      todayExpenses: totalExpenses || 4200,
-      estimatedCOGS: Math.round(estimatedCOGS),
-      estimatedNetProfit: Math.round(netProfit),
-      profitMarginPercent: 32.5,
-      mpesaSalesTotal: Math.round(totalRevenue * 0.65) || 18500,
-      cashSalesTotal: Math.round(totalRevenue * 0.35) || 10000,
-      cardSalesTotal: 0,
-      lowStockItemsCount: 1,
-      activeBranchesCount: 2,
+      averageTicket: relevantOrders.length ? Math.round(totalRevenue / relevantOrders.length) : 450,
+      todayCOGS: Math.round(estimatedCOGS) || 11970,
+      totalTodayExpenses: totalExpenses || 4200,
+      todayNetProfit: Math.round(netProfit) || 12330,
+      cashSales: Math.round(totalRevenue * 0.35) || 10000,
+      mpesaSales: Math.round(totalRevenue * 0.65) || 18500,
+      cardSales: 0,
+      lowStockCount: 1,
+      date: new Date().toISOString(),
     };
   },
 
   getSalesByCategory: () => [
-    { categoryName: 'Fast Foods & Chips', orderCount: 48, revenue: 14200 },
-    { categoryName: 'Kuku & Meat Dishes', orderCount: 28, revenue: 18400 },
-    { categoryName: 'Swahili Cooked Meals', orderCount: 35, revenue: 12600 },
-    { categoryName: 'Drinks & Juices', orderCount: 64, revenue: 6800 },
-    { categoryName: 'Snacks & Pasua Sides', orderCount: 40, revenue: 2400 },
+    { name: 'Fast Foods & Chips', revenue: 14200, quantity: 48 },
+    { name: 'Kuku & Meat Dishes', revenue: 18400, quantity: 28 },
+    { name: 'Swahili Cooked Meals', revenue: 12600, quantity: 35 },
+    { name: 'Drinks & Juices', revenue: 6800, quantity: 64 },
+    { name: 'Snacks & Pasua Sides', revenue: 2400, quantity: 40 },
   ],
 
   getTopItems: () => [
-    { itemName: 'Chips & 1/4 Kuku Combo', quantity: 38, revenue: 17100 },
-    { itemName: 'Swahili Beef Pilau', quantity: 29, revenue: 9280 },
-    { itemName: 'Chips Masala', quantity: 32, revenue: 6400 },
-    { itemName: 'Chips Plain', quantity: 40, revenue: 6000 },
-    { itemName: 'Coca-Cola 300ml', quantity: 55, revenue: 3300 },
+    { name: 'Chips & 1/4 Kuku Combo', variant: 'Full Meal', quantity: 38, revenue: 17100 },
+    { name: 'Swahili Beef Pilau', variant: 'Single Plate', quantity: 29, revenue: 9280 },
+    { name: 'Chips Masala', variant: 'Spicy', quantity: 32, revenue: 6400 },
+    { name: 'Chips Plain', variant: 'Regular', quantity: 40, revenue: 6000 },
+    { name: 'Coca-Cola 300ml', variant: 'Glass Bottle', quantity: 55, revenue: 3300 },
   ],
 
   getHourlySales: () => [
-    { hour: '08:00', orderCount: 4, revenue: 1200 },
-    { hour: '10:00', orderCount: 8, revenue: 2400 },
-    { hour: '12:00', orderCount: 24, revenue: 8600 },
-    { hour: '13:00', orderCount: 28, revenue: 11200 },
-    { hour: '15:00', orderCount: 12, revenue: 4500 },
-    { hour: '17:00', orderCount: 18, revenue: 6800 },
-    { hour: '19:00', orderCount: 22, revenue: 8900 },
+    { hour: '08:00', sales: 1200, orderCount: 4 },
+    { hour: '10:00', sales: 2400, orderCount: 8 },
+    { hour: '12:00', sales: 8600, orderCount: 24 },
+    { hour: '13:00', sales: 11200, orderCount: 28 },
+    { hour: '15:00', sales: 4500, orderCount: 12 },
+    { hour: '17:00', sales: 6800, orderCount: 18 },
+    { hour: '19:00', sales: 8900, orderCount: 22 },
   ],
 
   getBranchComparison: () => [
-    { branchId: 'branch-migadini', branchName: 'Migadini Main Shop', branchCode: 'MGD01', orderCount: 65, totalSales: 28500, averageTicket: 438, activeCashiersCount: 4 },
-    { branchId: 'branch-exp2', branchName: 'Branch 2 - Express', branchCode: 'EXP02', orderCount: 28, totalSales: 12400, averageTicket: 442, activeCashiersCount: 2 },
+    { branchId: 'branch-migadini', branchName: 'Migadini Main Shop', branchCode: 'MGD01', totalOrders: 65, totalSales: 28500, totalExpenses: 4200, totalCOGS: 11970, netProfit: 12330 },
+    { branchId: 'branch-exp2', branchName: 'Branch 2 - Express', branchCode: 'EXP02', totalOrders: 28, totalSales: 12400, totalExpenses: 1800, totalCOGS: 5200, netProfit: 5400 },
   ],
 
   getCashierPerformance: () => [
-    { cashierId: 'user-cashier1', cashierName: 'Cashier 1', branchName: 'Migadini Main Shop', orderCount: 24, totalSales: 11200, averageTicket: 466 },
-    { cashierId: 'user-cashier2', cashierName: 'Cashier 2', branchName: 'Migadini Main Shop', orderCount: 20, totalSales: 8900, averageTicket: 445 },
-    { cashierId: 'user-cashier3', cashierName: 'Cashier 3', branchName: 'Migadini Main Shop', orderCount: 14, totalSales: 6100, averageTicket: 435 },
-    { cashierId: 'user-cashier4', cashierName: 'Cashier 4', branchName: 'Migadini Main Shop', orderCount: 7, totalSales: 2300, averageTicket: 328 },
+    { cashierId: 'user-cashier1', name: 'Cashier 1', role: 'CASHIER', branchName: 'Migadini Main Shop', orderCount: 24, totalSales: 11200, avgTicket: 466 },
+    { cashierId: 'user-cashier2', name: 'Cashier 2', role: 'CASHIER', branchName: 'Migadini Main Shop', orderCount: 20, totalSales: 8900, avgTicket: 445 },
+    { cashierId: 'user-cashier3', name: 'Cashier 3', role: 'CASHIER', branchName: 'Migadini Main Shop', orderCount: 14, totalSales: 6100, avgTicket: 435 },
+    { cashierId: 'user-cashier4', name: 'Cashier 4', role: 'CASHIER', branchName: 'Migadini Main Shop', orderCount: 7, totalSales: 2300, avgTicket: 328 },
   ],
 
   getProfitLoss: () => ({

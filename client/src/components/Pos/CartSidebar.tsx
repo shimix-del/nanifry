@@ -21,11 +21,13 @@ import { formatKES } from '../../utils/currency';
 interface CartSidebarProps {
   onOpenPaymentModal: () => void;
   onOpenHeldOrders: () => void;
+  onClose?: () => void;
 }
 
 export const CartSidebar: React.FC<CartSidebarProps> = ({
   onOpenPaymentModal,
   onOpenHeldOrders,
+  onClose,
 }) => {
   const {
     cartItems,
@@ -78,6 +80,19 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
   return (
     <div className="w-full lg:w-96 bg-zinc-900 border-l border-zinc-800 flex flex-col h-full select-none justify-between">
+      {/* Mobile Back to Menu Bar */}
+      {onClose && (
+        <div className="lg:hidden p-2.5 bg-zinc-850 border-b border-zinc-750 flex items-center justify-between">
+          <button
+            onClick={onClose}
+            className="flex items-center space-x-1.5 text-xs font-bold text-brand-400 hover:text-brand-300 py-1 px-2.5 rounded-lg bg-zinc-800"
+          >
+            <span>← Back to Food Menu</span>
+          </button>
+          <span className="text-xs font-extrabold text-white">Cart ({cartItems.length})</span>
+        </div>
+      )}
+
       {/* Header: Order Type & Held Tickets */}
       <div className="p-3 border-b border-zinc-800 bg-zinc-900/90 space-y-2.5">
         {/* Order Type Tabs */}

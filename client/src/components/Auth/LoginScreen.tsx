@@ -67,12 +67,12 @@ export const LoginScreen: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col justify-center items-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-zinc-950 flex flex-col justify-center items-center p-3 sm:p-4 relative overflow-y-auto">
       {/* Background glow */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-600/20 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10">
+      <div className="w-full max-w-md bg-zinc-900/90 border border-zinc-800 rounded-3xl p-5 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10 my-auto">
         {/* Brand Header */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-amber-500 shadow-xl shadow-brand-500/25 text-3xl mb-3">
